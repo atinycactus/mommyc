@@ -23,6 +23,11 @@ inline constexpr auto kDefaultLittle{"girl"};
 inline constexpr auto kDefaultRoles{"mommy"};
 inline constexpr auto kDefaultPronouns{"her"};
 inline constexpr auto kDefaultEmotes{"❤️/💖/💗/💓/💞"};
+#ifdef ENABLE_LEWD
+inline constexpr auto kDefaultMood{"chill"};
+inline constexpr auto kDefaultDenigratingTerms{"slut/toy/pet/pervert/whore"};
+inline constexpr auto kDefaultParts{"milk"};
+#endif
 
 std::optional<const char*> GetEnv(const char* var) noexcept {
   if (auto v = std::getenv(var)) {
@@ -89,6 +94,11 @@ int main(int argc, char** argv) {
   const auto pronouns{GetEnv("MOMMYS_PRONOUNS").value_or(kDefaultPronouns)};
   const auto roles{GetEnv("MOMMYS_ROLES").value_or(kDefaultRoles)};
   const auto emotes{GetEnv("MOMMYS_EMOTES").value_or(kDefaultEmotes)};
+#ifdef ENABLE_LEWD
+  const auto denigrating_terms{GetEnv("MOMMYS_FUCKING").value_or(kDefaultDenigratingTerms)};
+  const auto parts{GetEnv("MOMMYS_PART").value_or(kDefaultParts)};
+  const auto moods{GetEnv("MOMMYS_MOOD").value_or(kDefaultMood)};
+#endif
 
   std::string_view program_name{argv[0]};
 
@@ -117,18 +127,46 @@ int main(int argc, char** argv) {
     style = fmt::fg(fmt::terminal_color::red);
   }
 
-  // for now we'll hard-code the chill mood~
+#ifndef ENABLE_LEWD
   auto resp{responses::Get<responses::Chill>(resp_type)};
+#else
+  std::string_view resp;
+  const auto chosen_mood{Choose(moods)};
+  if (chosen_mood == "chill") {
+    resp = responses::Get<responses::Chill>(resp_type);
+  } else if (chosen_mood == "thirsty") {
+    resp = responses::Get<responses::Thirsty>(resp_type);
+  } else if (chosen_mood == "yikes") {
+    resp = responses::Get<responses::Yikes>(resp_type);
+  } else {
+    style = fmt::fg(fmt::terminal_color::red);
+    resp = "{role} doesn't know how to feel {mood} :(";
+  }
+#endif
 
   const auto chosen_little{Choose(littles)};
   const auto chosen_pronouns{Choose(pronouns)};
   const auto chosen_role{Choose(roles)};
   const auto chosen_emote{Choose(emotes)};
+#ifdef ENABLE_LEWD
+  const auto chosen_denigrating_term{Choose(denigrating_terms)};
+  const auto chosen_part{Choose(parts)};
+#endif
 
+#ifndef ENABLE_LEWD
   auto msg{fmt::format(fmt::runtime(resp),
                        fmt::arg("affectionate_term", chosen_little),
                        fmt::arg("role", chosen_role),
                        fmt::arg("pronoun", chosen_pronouns))};
+#else
+  auto msg{fmt::format(fmt::runtime(resp),
+                       fmt::arg("affectionate_term", chosen_little),
+                       fmt::arg("role", chosen_role),
+                       fmt::arg("pronoun", chosen_pronouns),
+                       fmt::arg("denigrating_term", chosen_denigrating_term),
+                       fmt::arg("part", chosen_part),
+                       fmt::arg("mood", chosen_mood))};
+#endif
 
   fmt::print(stderr, "{} {}\n", fmt::styled(msg, style), chosen_emote);
 
