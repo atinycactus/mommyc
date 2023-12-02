@@ -126,9 +126,9 @@ int main(int argc, char** argv) {
   const auto chosen_emote{Choose(emotes)};
 
   auto msg{fmt::format(fmt::runtime(resp),
-                       fmt::arg("AFFECTIONATE_TERM", chosen_little),
-                       fmt::arg("MOMMYS_ROLE", chosen_role),
-                       fmt::arg("MOMMYS_PRONOUN", chosen_pronouns))};
+                       fmt::arg("affectionate_term", chosen_little),
+                       fmt::arg("role", chosen_role),
+                       fmt::arg("pronoun", chosen_pronouns))};
 
   fmt::print(stderr, "{} {}\n", fmt::styled(msg, style), chosen_emote);
 
